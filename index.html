@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La roue magique — Les nombres de 1 à 30</title>
+<style>
+:root{--ink:#20234a;--purple:#6c4be8;--pink:#ff5da2;--mint:#26c6a5;--gold:#ffc857}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:radial-gradient(circle at top left,#fff1f8,transparent 38%),linear-gradient(135deg,#edf5ff,#f7f0ff);padding:20px}
+header{text-align:center;max-width:900px;margin:0 auto 18px}
+h1{margin:4px 0;font-size:clamp(1.7rem,4vw,2.5rem)}
+header p{margin:6px 0;color:#555779}
+main{max-width:1100px;margin:auto;display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,.85fr);gap:22px;align-items:stretch}
+.panel{background:#ffffffdf;border:1px solid #ffffff;border-radius:24px;padding:clamp(16px,3vw,28px);box-shadow:0 14px 38px #3a34751a}
+.wheel-wrap{position:relative;width:min(100%,430px);aspect-ratio:1;margin:4px auto 18px}
+#wheel{width:100%;height:100%;border-radius:50%;box-shadow:0 8px 0 #d9d5f0,0 15px 28px #40347a26;transition:transform 4.2s cubic-bezier(.12,.72,.08,1);border:7px solid white}
+.pointer{position:absolute;z-index:2;top:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #29234f;filter:drop-shadow(0 3px 2px #0002)}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22%;aspect-ratio:1;border-radius:50%;background:white;border:5px solid #f0eaff;display:grid;place-items:center;font-size:clamp(18px,3vw,30px);box-shadow:0 3px 10px #29234f25}
+button{border:0;border-radius:14px;padding:13px 18px;font-weight:750;font-size:1rem;cursor:pointer;transition:transform .15s,opacity .15s}
+button:hover{transform:translateY(-1px)}button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.primary{background:linear-gradient(135deg,var(--purple),#9274ff);color:white;box-shadow:0 5px 0 #4d35b5}
+.secondary{background:#ece8ff;color:#392b8b}
+#spin{display:block;width:min(100%,330px);margin:0 auto}
+.right-title{font-size:1.35rem;margin:0 0 8px}
+.instruction{line-height:1.55;color:#5b5c7c;margin:0 0 20px}
+.number-display{display:flex;align-items:center;justify-content:center;min-height:90px;border-radius:18px;background:linear-gradient(135deg,#f1edff,#fff0f7);font-size:clamp(2rem,5vw,3rem);font-weight:850;color:#5b42cb;margin:12px 0 18px}
+label{display:block;font-weight:750;margin:12px 0 8px}
+input{width:100%;font:inherit;font-size:1.05rem;padding:15px;border:2px solid #d9d4f4;border-radius:13px;outline:none;background:white}
+input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #6c4be822}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1;min-width:130px}
+#feedback{min-height:66px;margin-top:16px;padding:13px 15px;border-radius:14px;background:#f5f4fc;color:#4b4c70;line-height:1.45}
+#feedback.good{background:#e5fff6;color:#08684e;font-weight:750}
+#feedback.bad{background:#fff0f1;color:#a82b42;font-weight:750}
+.small{font-size:.9rem;color:#777895;margin-top:14px;line-height:1.5}
+.score{display:flex;gap:10px;margin-top:14px}
+.score div{flex:1;text-align:center;background:#f6f3ff;border-radius:13px;padding:10px}
+.score strong{display:block;font-size:1.35rem}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
+.confetto{position:absolute;top:-20px;width:9px;height:14px;animation:fall 2.2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(800deg);opacity:.2}}
+@media(max-width:760px){body{padding:12px}main{grid-template-columns:1fr}.wheel-wrap{width:min(100%,360px)}}
+</style>
+</head>
+<body>
+<div id="confetti"></div>
+<header>
+  <h1>🎯 La roue magique des nombres</h1>
+  <p>Tourne la roue, lis le nombre et écris-le en toutes lettres en français !</p>
+</header>
+<main>
+  <section class="panel">
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="800" height="800" aria-label="Roue de nombres de 1 à 30"></canvas>
+      <div class="center">🎲</div>
+    </div>
+    <button id="spin" class="primary">🎡 Tourner la roue</button>
+    <p class="small" style="text-align:center">La roue choisit un nombre au hasard entre 1 et 30.</p>
+  </section>
+  <section class="panel">
+    <h2 class="right-title">✍️ À toi de jouer !</h2>
+    <p class="instruction">Quand la roue s’arrête, écris le nombre en lettres françaises dans le champ ci-dessous, puis vérifie ta réponse.</p>
+    <div class="number-display" id="numberDisplay">?</div>
+    <label for="answer">Écris le nombre en français :</label>
+    <input id="answer" type="text" placeholder="Ex. : vingt et un" autocomplete="off" disabled>
+    <div class="actions">
+      <button id="check" class="primary" disabled>Vérifier</button>
+      <button id="clear" class="secondary" disabled>Effacer</button>
+    </div>
+    <div id="feedback" role="status" aria-live="polite">Clique sur « Tourner la roue » pour commencer.</div>
+    <div class="score">
+      <div><span>Bonnes réponses</span><strong id="correctCount">0</strong></div>
+      <div><span>Essais</span><strong id="tryCount">0</strong></div>
+    </div>
+    <p class="small">Astuce : les traits d’union et les espaces sont acceptés. Une réponse incorrecte ne révèle pas la solution : réessaie !</p>
+  </section>
+</main>
+<script>
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const N = 30, slice = 2 * Math.PI / N;
+const colors = ['#7865e8','#ff6fae','#29c7ad','#ffbd4a','#4f9df7','#f47b55'];
+function drawWheel(){
+  const cx=400, cy=400, r=385;
+  ctx.clearRect(0,0,800,800);
+  for(let i=0;i<N;i++){
+    const start=-Math.PI/2+i*slice, end=start+slice;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+slice/2);
+    ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillStyle='#fff';
+    ctx.font='bold 27px system-ui, sans-serif';ctx.shadowColor='#2225';ctx.shadowBlur=2;
+    ctx.fillText(String(i+1),r-25,0);ctx.restore();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.lineWidth=10;ctx.strokeStyle='#fff';ctx.stroke();
+}
+drawWheel();
+
+const words = {
+1:'un',2:'deux',3:'trois',4:'quatre',5:'cinq',6:'six',7:'sept',8:'huit',9:'neuf',10:'dix',
+11:'onze',12:'douze',13:'treize',14:'quatorze',15:'quinze',16:'seize',17:'dix-sept',18:'dix-huit',19:'dix-neuf',
+20:'vingt',21:'vingt et un',22:'vingt-deux',23:'vingt-trois',24:'vingt-quatre',25:'vingt-cinq',
+26:'vingt-six',27:'vingt-sept',28:'vingt-huit',29:'vingt-neuf',30:'trente'
+};
+const wheelEl=document.getElementById('wheel'), spinBtn=document.getElementById('spin');
+const display=document.getElementById('numberDisplay'), answer=document.getElementById('answer');
+const checkBtn=document.getElementById('check'), clearBtn=document.getElementById('clear'), feedback=document.getElementById('feedback');
+let target=null, rotation=0, spinning=false, solved=false, correct=0, tries=0;
+function normalize(s){
+ return s.toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+ .replace(/[’']/g,' ').replace(/[-‐‑‒–—]/g,' ').replace(/[.,!?]/g,' ')
+ .replace(/\s+/g,' ').trim();
+}
+function playTone(freq=660,duration=.13,type='sine'){
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ac=new AC();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.16,ac.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+duration);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+duration+.02);o.onended=()=>ac.close();}catch(e){}
+}
+function celebrate(){
+ const root=document.getElementById('confetti');root.innerHTML='';
+ const palette=['#6c4be8','#ff5da2','#26c6a5','#ffc857','#4f9df7'];
+ for(let i=0;i<95;i++){const p=document.createElement('i');p.className='confetto';p.style.left=(Math.random()*100)+'%';p.style.background=palette[i%palette.length];p.style.animationDelay=(Math.random()*.7)+'s';p.style.transform='rotate('+(Math.random()*360)+'deg)';root.appendChild(p);}
+ setTimeout(()=>root.innerHTML='',3200);
+}
+function fairRandom1to30(){
+ // Rejection sampling avoids modulo bias: every number has equal probability.
+ const range=0x100000000, limit=Math.floor(range/N)*N;
+ const a=new Uint32Array(1);
+ do{crypto.getRandomValues(a);}while(a[0]>=limit);
+ return (a[0]%N)+1;
+}
+spinBtn.addEventListener('click',()=>{
+ if(spinning)return;
+ spinning=true;solved=false;target=fairRandom1to30();
+ answer.value='';answer.disabled=true;checkBtn.disabled=true;clearBtn.disabled=true;
+ display.textContent='…';feedback.className='';feedback.textContent='La roue tourne…';
+ spinBtn.disabled=true;
+ const index=target-1, center=index*12+6;
+ const mod=((360-center-(rotation%360))+360)%360;
+ rotation += 360*5 + mod;
+ wheelEl.style.transform=`rotate(${rotation}deg)`;
+ playTone(440,.2,'triangle');
+ setTimeout(()=>{
+  spinning=false;spinBtn.disabled=false;answer.disabled=false;checkBtn.disabled=false;clearBtn.disabled=false;
+  display.textContent=String(target);feedback.textContent='À toi ! Écris ce nombre en toutes lettres.';answer.focus();playTone(720,.18,'triangle');
+ },4250);
+});
+function checkAnswer(){
+ if(target===null||spinning||solved)return;
+ tries++;document.getElementById('tryCount').textContent=tries;
+ const expected=normalize(words[target]), actual=normalize(answer.value);
+ if(actual===expected){
+  correct++;document.getElementById('correctCount').textContent=correct;
+  feedback.className='good';feedback.textContent='🎉 Bravo ! C’est correct ! '+words[target]+'. Tu peux tourner la roue pour un nouveau nombre.';
+  solved=true;checkBtn.disabled=true;answer.disabled=true;playTone(660,.15);setTimeout(()=>playTone(880,.18),140);setTimeout(()=>playTone(1100,.25),290);celebrate();
+ }else{
+  feedback.className='bad';feedback.textContent='❌ Incorrect ! Réessaie. Vérifie l’orthographe et les traits d’union.';
+  playTone(220,.25,'square');answer.focus();answer.select();
+ }
+}
+checkBtn.addEventListener('click',checkAnswer);
+answer.addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer();});
+clearBtn.addEventListener('click',()=>{answer.value='';answer.focus();feedback.className='';feedback.textContent='Réessaie : tu peux le faire !';});
+</script>
+</body>
+</html>
